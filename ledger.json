@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "timestamp": "2026-05-09T22:55:54-07:00",
+    "type": "feature",
+    "prompt": "want to create a light weight browser task management application. Key functionalities include creation of tasks, grouping tasks, having tasks be dependencies of other tasks, priority of tasks, due date of task, and estimated effort for task, and ability to create subtask based off main task.",
+    "description": "Initial creation of the TaskFlow browser application including core task models, UI, and local storage integration."
+  },
+  {
+    "id": 2,
+    "timestamp": "2026-05-09T23:47:14-07:00",
+    "type": "feature_update",
+    "prompt": "The subtask should be visible on the kanban board within the task with the subtasks name & date due being the the submodal. Also for expanding the subtask, let's have the same functionality as expanding the task modal: popping into a form ui",
+    "description": "Refactored subtasks to be visible directly on the Kanban board cards as clickable submodals. Clicking a subtask opens the full task editor modal, and styled the subtasks to match the application's glass UI aesthetic."
+  },
+  {
+    "id": 3,
+    "timestamp": "2026-05-09T23:56:00-07:00",
+    "type": "feature_update",
+    "prompt": "For the sidebar, let's actually make it a filter functionality. You can create groups here but you can select or deselect groups... If I delete the group, ask for confirmation... make the popup appear center of the screen, over the kanban board with a grayed out background",
+    "description": "Implemented group filtering from the sidebar to control Kanban board visibility. Replaced group deletion with a custom, in-app modal confirmation (using React Portals) that permanently deletes the group along with all associated top-level tasks and subtasks."
+  },
+  {
+    "id": 4,
+    "timestamp": "2026-05-10T00:21:50-07:00",
+    "type": "feature",
+    "prompt": "Let's create a calendar view that shows the tasks in a calendar UI on a seperate page. Remember to follow AI_Instructions.md when creating this feature",
+    "description": "Implemented a Calendar View to visualize tasks by due date. Includes drag-and-drop to reschedule tasks and state-based navigation from the Sidebar."
+  }
+]
