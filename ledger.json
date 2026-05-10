@@ -26,5 +26,19 @@
     "type": "feature",
     "prompt": "Let's create a calendar view that shows the tasks in a calendar UI on a seperate page. Remember to follow AI_Instructions.md when creating this feature",
     "description": "Implemented a Calendar View to visualize tasks by due date. Includes drag-and-drop to reschedule tasks and state-based navigation from the Sidebar."
+  },
+  {
+    "id": 5,
+    "timestamp": "2026-05-10T14:45:59-07:00",
+    "type": "feature",
+    "prompt": "Let's create the authentication feature. This will entail using a backend service -- let's use supabase. For auth, let's use a 3rd party connection to gmail account. Tasks will be saved to the authenticated user.",
+    "description": "Integrated Supabase Authentication with Google OAuth support. Added a custom Login screen and user profile management in the Sidebar."
+  },
+  {
+    "id": 6,
+    "timestamp": "2026-05-10T15:03:38-07:00",
+    "type": "feature_update",
+    "prompt": "google login is enabled and configured the .env file. executed the query. Let's also add a reminder column with the value being in days including 0 (current day)",
+    "description": "Migrated task and group storage from localStorage to Supabase backend. Implemented data migration logic, updated TaskContext for real-time sync, and added a reminder system for tasks."
   }
 ]

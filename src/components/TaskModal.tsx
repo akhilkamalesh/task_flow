@@ -87,10 +87,11 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'Medium');
   const [status, setStatus] = useState<TaskStatus>(task?.status || 'Todo');
-  const [groupId, setGroupId] = useState(task?.groupId || 'inbox');
+  const [groupId, setGroupId] = useState(task?.groupId || (groups.length > 0 ? groups[0].id : ''));
   const [dueDate, setDueDate] = useState(task?.dueDate ? task.dueDate.split('T')[0] : '');
   const [estimatedEffort, setEstimatedEffort] = useState(task?.estimatedEffort || '');
   const [dependencies, setDependencies] = useState<string[]>(task?.dependencies || []);
+  const [reminderDays, setReminderDays] = useState<number>(task?.reminderDays || 0);
   const [error, setError] = useState('');
 
   const isEditing = !!task;
@@ -114,6 +115,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
       estimatedEffort,
       dependencies,
+      reminderDays,
       parentId: task?.parentId || parentId,
     };
 
@@ -202,6 +204,18 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
               {possibleDependencies.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
             </select>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Hold Ctrl/Cmd to select multiple</span>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Reminder (Days before due date)</label>
+            <input 
+              type="number" 
+              min="0" 
+              value={reminderDays} 
+              onChange={e => setReminderDays(parseInt(e.target.value) || 0)} 
+              style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} 
+            />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Enter 0 for same-day reminder</span>
           </div>
 
           <div>

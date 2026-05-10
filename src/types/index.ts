@@ -13,6 +13,7 @@ export interface Task {
   parentId?: string; // For subtasks
   dependencies: string[]; // Array of task IDs
   createdAt: string;
+  reminderDays?: number; // Days before due date
 }
 
 export interface Group {
