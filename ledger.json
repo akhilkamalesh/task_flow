@@ -40,5 +40,26 @@
     "type": "feature_update",
     "prompt": "google login is enabled and configured the .env file. executed the query. Let's also add a reminder column with the value being in days including 0 (current day)",
     "description": "Migrated task and group storage from localStorage to Supabase backend. Implemented data migration logic, updated TaskContext for real-time sync, and added a reminder system for tasks."
+  },
+  {
+    "id": 7,
+    "timestamp": "2026-05-11T20:56:34-07:00",
+    "type": "feature_update",
+    "prompt": "Let's create a reminders page: This can be accessed via the tab navigation underneath calendar. When you click on this tab, it will show you the reminders you have for that day based on the task reminder value. The tasks in reminders will continue to be there unless they are marked as done. They will be sorted by due date, then by priority.",
+    "description": "Created a dedicated Reminders view and TaskReminders component. Implemented logic to filter tasks where (dueDate - reminderDays) <= today, with multi-level sorting by due date and priority."
+  },
+  {
+    "id": 8,
+    "timestamp": "2026-05-11T21:04:49-07:00",
+    "type": "ui_update",
+    "prompt": "within the navigation tabs, let's have numbers indicating how many to-do's and in progress there are... Actually let's just do for reminders to show how many reminders there are.",
+    "description": "Updated Sidebar navigation to include dynamic badge indicators. Added a real-time counter for active reminders in a circular badge within the sidebar tab."
+  },
+  {
+    "id": 9,
+    "timestamp": "2026-05-11T21:29:56-07:00",
+    "type": "feature_update",
+    "prompt": "Let's also set up email notifications about reminders since we already have that captured with google sign in. Use Resend.",
+    "description": "Integrated automated email notifications using Supabase Edge Functions and Resend. Configured pg_cron to trigger a daily background job at 8:00 AM UTC to dispatch reminder summaries to users."
   }
 ]

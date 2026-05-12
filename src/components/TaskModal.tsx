@@ -8,6 +8,9 @@ interface Props {
   parentId?: string;
 }
 
+import { formatDateLocal } from '../utils/dateUtils';
+
+
 const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTask: (id: string, data: Partial<Task>) => void, onClose: () => void }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -39,7 +42,7 @@ const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTa
           </span>
           {subtask.dueDate && (
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Due: {new Date(subtask.dueDate).toLocaleDateString()}
+              Due: {formatDateLocal(subtask.dueDate)}
             </span>
           )}
         </div>

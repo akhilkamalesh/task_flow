@@ -3,7 +3,9 @@ import { createPortal } from 'react-dom';
 import { useTasks } from '../context/TaskContext';
 import { useAuth } from '../context/AuthContext';
 import type { Group } from '../types';
-import type { ViewState } from '../App';
+import type { ViewState } from '../types';
+import { getStartOfDay } from '../utils/dateUtils';
+
 
 interface SidebarProps {
   currentView: ViewState;
@@ -11,10 +13,23 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
-  const { groups, addGroup, deleteGroup, selectedGroups, toggleGroupSelection } = useTasks();
+  const { tasks, groups, addGroup, deleteGroup, selectedGroups, toggleGroupSelection } = useTasks();
   const { user, signOut } = useAuth();
   const [newGroupName, setNewGroupName] = useState('');
   const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
+
+
+  const today = getStartOfDay(new Date());
+
+  const reminderCount = tasks.filter(t => {
+    if (t.status === 'Done') return false;
+    if (!t.dueDate || t.reminderDays === undefined || t.reminderDays === null) return false;
+    if (t.groupId && !selectedGroups.includes(t.groupId)) return false;
+    const dueDate = new Date(t.dueDate);
+    const reminderDate = new Date(dueDate);
+    reminderDate.setDate(reminderDate.getDate() - t.reminderDays);
+    return getStartOfDay(reminderDate) <= today;
+  }).length;
 
   const handleAddGroup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +76,39 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
               Calendar
+            </button>
+            <button 
+              onClick={() => onViewChange('reminders')}
+              className="btn-icon"
+              style={{ 
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderRadius: '8px',
+                background: currentView === 'reminders' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                color: currentView === 'reminders' ? 'white' : 'var(--text-secondary)',
+                border: 'none', cursor: 'pointer', textAlign: 'left', fontWeight: currentView === 'reminders' ? 600 : 500,
+                transition: 'all 0.2s', width: '100%'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Reminders
+              </div>
+              {reminderCount > 0 && (
+                <div style={{ 
+                  background: 'var(--accent-primary)', 
+                  color: 'white', 
+                  fontSize: '11px', 
+                  fontWeight: 600, 
+                  height: '20px',
+                  minWidth: '20px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 6px'
+                }}>
+                  {reminderCount}
+                </div>
+              )}
             </button>
           </div>
         </div>

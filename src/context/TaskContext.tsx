@@ -23,8 +23,16 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(() => {
+    const saved = localStorage.getItem('task_manager_selected_groups');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem('task_manager_selected_groups', JSON.stringify(selectedGroups));
+  }, [selectedGroups]);
+
 
   const fetchTasksAndGroups = useCallback(async () => {
     if (!user) return;
@@ -69,10 +77,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       setGroups(mappedGroups);
       setTasks(mappedTasks);
       
-      // Initialize selected groups if empty
-      if (selectedGroups.length === 0) {
+      // Initialize selected groups if empty and we have groups
+      if (selectedGroups.length === 0 && mappedGroups.length > 0) {
         setSelectedGroups(mappedGroups.map(g => g.id));
       }
+
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -241,31 +250,29 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const deleteTask = async (id: string) => {
     if (!user) return;
 
+    const toDelete = new Set([id]);
+    let size = 0;
+    while (toDelete.size !== size) {
+      size = toDelete.size;
+      tasks.forEach(t => {
+        if (t.parentId && toDelete.has(t.parentId)) {
+          toDelete.add(t.id);
+        }
+      });
+    }
+
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', id);
+      .in('id', Array.from(toDelete));
 
     if (error) throw error;
 
-    setTasks(prev => {
-      // Supabase handles cascading delete for parent_id if configured, 
-      // but let's update local state correctly.
-      const toDelete = new Set([id]);
-      let size = 0;
-      while (toDelete.size !== size) {
-        size = toDelete.size;
-        prev.forEach(t => {
-          if (t.parentId && toDelete.has(t.parentId)) {
-            toDelete.add(t.id);
-          }
-        });
-      }
-      return prev.filter(t => !toDelete.has(t.id));
-    });
+    setTasks(prev => prev.filter(t => !toDelete.has(t.id)));
   };
 
   const addGroup = async (name: string) => {
+
     if (!user) return;
 
     const { data, error } = await supabase
@@ -287,6 +294,22 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const deleteGroup = async (id: string) => {
     if (!user) return;
 
+    const toDelete = new Set(tasks.filter(t => t.groupId === id).map(t => t.id));
+    let size = 0;
+    while (toDelete.size !== size) {
+      size = toDelete.size;
+      tasks.forEach(t => {
+        if (t.parentId && toDelete.has(t.parentId)) {
+          toDelete.add(t.id);
+        }
+      });
+    }
+
+    // Delete tasks first to avoid foreign key issues (though cascade would be better)
+    if (toDelete.size > 0) {
+      await supabase.from('tasks').delete().in('id', Array.from(toDelete));
+    }
+
     const { error } = await supabase
       .from('groups')
       .delete()
@@ -296,22 +319,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
     setGroups(prev => prev.filter(g => g.id !== id));
     setSelectedGroups(prev => prev.filter(gId => gId !== id));
-    setTasks(prev => {
-      const toDelete = new Set(prev.filter(t => t.groupId === id).map(t => t.id));
-      let size = 0;
-      while (toDelete.size !== size) {
-        size = toDelete.size;
-        prev.forEach(t => {
-          if (t.parentId && toDelete.has(t.parentId)) {
-            toDelete.add(t.id);
-          }
-        });
-      }
-      return prev.filter(t => !toDelete.has(t.id));
-    });
+    setTasks(prev => prev.filter(t => !toDelete.has(t.id)));
   };
 
   const toggleGroupSelection = (id: string) => {
+
     setSelectedGroups(prev => 
       prev.includes(id) ? prev.filter(gId => gId !== id) : [...prev, id]
     );

@@ -4,8 +4,8 @@ import { useAuth } from './context/AuthContext';
 import { Login } from './components/auth/Login';
 import { Dashboard } from './components/Dashboard';
 import './styles/index.css';
+import type { ViewState } from './types';
 
-export type ViewState = 'board' | 'calendar';
 
 function App() {
   const { user, loading } = useAuth();

@@ -1,27 +1,9 @@
 import React from 'react';
 import { useTasks } from '../context/TaskContext';
-import type { Task, TaskStatus } from '../types';
-import { formatDateLocal } from '../utils/dateUtils';
+import type { Task } from '../types';
 
-const statusColumns: TaskStatus[] = ['Todo', 'In Progress', 'Done'];
+import { formatDateLocal, getStartOfDay } from '../utils/dateUtils';
 
-const TaskBoard = () => {
-  const { tasks, updateTask, selectedGroups } = useTasks();
-
-  const topLevelTasks = tasks.filter(t => !t.parentId && (t.groupId ? selectedGroups.includes(t.groupId) : true));
-
-  const statusColors: Record<string, string> = {
-    Todo: 'var(--text-secondary)',
-    'In Progress': 'var(--accent-primary)',
-    Done: 'var(--accent-success)',
-  };
-
-  const handleDrop = (e: React.DragEvent, status: TaskStatus) => {
-    const taskId = e.dataTransfer.getData('taskId');
-    if (taskId) {
-      updateTask(taskId, { status });
-    }
-  };
 
 const SubtaskItem = ({ subtask, updateTask, onOpenModal }: { subtask: Task, updateTask: (id: string, updates: Partial<Task>) => void, onOpenModal: (t: Task) => void }) => {
   const handleCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,14 +75,13 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
     Low: 'var(--accent-success)',
   };
 
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('taskId', task.id);
+  const handleCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    updateTask(task.id, { status: e.target.checked ? 'Done' : 'Todo' });
   };
 
   return (
     <div 
-      draggable
-      onDragStart={handleDragStart}
       onClick={() => onOpenModal(task)}
       className="glass-panel"
       style={{ padding: '16px', marginBottom: '12px', cursor: 'pointer', position: 'relative', overflow: 'hidden', opacity: !dependenciesMet ? 0.7 : 1, transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
@@ -114,7 +95,16 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
         </span>
         {task.dueDate && <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{formatDateLocal(task.dueDate)}</span>}
       </div>
-      <h4 style={{ marginBottom: '8px', color: task.status === 'Done' ? 'var(--text-secondary)' : 'white', textDecoration: task.status === 'Done' ? 'line-through' : 'none' }}>{task.title}</h4>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+        <input 
+          type="checkbox" 
+          checked={task.status === 'Done'} 
+          onChange={handleCheck} 
+          onClick={e => e.stopPropagation()}
+          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-primary)', marginTop: '2px' }}
+        />
+        <h4 style={{ margin: 0, color: task.status === 'Done' ? 'var(--text-secondary)' : 'white', textDecoration: task.status === 'Done' ? 'line-through' : 'none' }}>{task.title}</h4>
+      </div>
       
       {task.estimatedEffort && (
         <div style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -139,64 +129,62 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
   );
 };
 
-  return (
-    <>
-      <div style={{ display: 'flex', gap: '24px', flex: 1, overflow: 'hidden' }}>
-        {statusColumns.map(status => (
-          <div 
-            key={status} 
-            className="glass-panel"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(26, 29, 36, 0.4)', borderRadius: '16px', overflow: 'hidden' }}
-            onDragOver={e => e.preventDefault()}
-            onDrop={e => handleDrop(e, status)}
-          >
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  background: statusColors[status] || 'var(--text-secondary)'
-                }} />
-                {status}
-              </div>
-              <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', minWidth: '24px', textAlign: 'center' }}>
-                {topLevelTasks.filter(t => t.status === status).length}
-              </span>
-            </div>
-            <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
-              {topLevelTasks.filter(t => t.status === status)
-                .sort((a, b) => {
-                  if (a.dueDate && b.dueDate) {
-                    const dateA = new Date(a.dueDate).getTime();
-                    const dateB = new Date(b.dueDate).getTime();
-                    if (dateA !== dateB) return dateA - dateB;
-                  } else if (a.dueDate) {
-                    return -1;
-                  } else if (b.dueDate) {
-                    return 1;
-                  }
+const TaskReminders = () => {
+  const { tasks, updateTask, selectedGroups } = useTasks();
 
-                  const priorityWeight: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
-                  const priorityA = priorityWeight[a.priority] || 0;
-                  const priorityB = priorityWeight[b.priority] || 0;
-                  return priorityB - priorityA;
-                })
-                .map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  tasks={tasks} 
-                  updateTask={updateTask} 
-                  onOpenModal={(t) => document.dispatchEvent(new CustomEvent('edit-task-modal', { detail: t }))} 
-                />
-              ))}
-            </div>
+
+
+  const today = getStartOfDay(new Date());
+
+  const reminderTasks = tasks.filter(t => {
+    if (t.status === 'Done') return false;
+    if (!t.dueDate || t.reminderDays === undefined || t.reminderDays === null) return false;
+    
+    // Only include if in selected groups
+    if (t.groupId && !selectedGroups.includes(t.groupId)) return false;
+
+    // A task can be a reminder if its due date minus reminder days is today or earlier
+    const dueDate = new Date(t.dueDate);
+    const reminderDate = new Date(dueDate);
+    reminderDate.setDate(reminderDate.getDate() - t.reminderDays);
+
+    return getStartOfDay(reminderDate) <= today;
+  });
+
+  const sortedTasks = reminderTasks.sort((a, b) => {
+    // Due date
+    const dateA = new Date(a.dueDate!).getTime();
+    const dateB = new Date(b.dueDate!).getTime();
+    if (dateA !== dateB) return dateA - dateB;
+
+    // Priority
+    const priorityWeight: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+    const priorityA = priorityWeight[a.priority] || 0;
+    const priorityB = priorityWeight[b.priority] || 0;
+    return priorityB - priorityA;
+  });
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
+        {sortedTasks.length === 0 ? (
+          <div className="glass-panel" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            No active reminders for today.
           </div>
-        ))}
+        ) : (
+          sortedTasks.map(task => (
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              tasks={tasks} 
+              updateTask={updateTask} 
+              onOpenModal={(t) => document.dispatchEvent(new CustomEvent('edit-task-modal', { detail: t }))} 
+            />
+          ))
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
-export default TaskBoard;
+export default TaskReminders;

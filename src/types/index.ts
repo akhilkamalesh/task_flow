@@ -1,7 +1,10 @@
 export type TaskPriority = 'High' | 'Medium' | 'Low';
 export type TaskStatus = 'Todo' | 'In Progress' | 'Done';
 
+export type ViewState = 'board' | 'calendar' | 'reminders';
+
 export interface Task {
+
   id: string;
   title: string;
   description?: string;
