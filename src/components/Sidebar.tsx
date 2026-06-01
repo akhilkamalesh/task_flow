@@ -4,7 +4,7 @@ import { useTasks } from '../context/TaskContext';
 import { useAuth } from '../context/AuthContext';
 import type { Group } from '../types';
 import type { ViewState } from '../types';
-import { getStartOfDay } from '../utils/dateUtils';
+import { getStartOfDay, parseDateLocal } from '../utils/dateUtils';
 
 
 interface SidebarProps {
@@ -25,7 +25,7 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
     if (t.status === 'Done') return false;
     if (!t.dueDate || t.reminderDays === undefined || t.reminderDays === null) return false;
     if (t.groupId && !selectedGroups.includes(t.groupId)) return false;
-    const dueDate = new Date(t.dueDate);
+    const dueDate = parseDateLocal(t.dueDate);
     const reminderDate = new Date(dueDate);
     reminderDate.setDate(reminderDate.getDate() - t.reminderDays);
     return getStartOfDay(reminderDate) <= today;

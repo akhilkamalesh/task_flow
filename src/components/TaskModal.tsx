@@ -86,11 +86,13 @@ const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTa
 const TaskModal = ({ task, onClose, parentId }: Props) => {
   const { tasks, groups, addTask, updateTask, deleteTask } = useTasks();
 
+  const parentTask = parentId ? tasks.find(t => t.id === parentId) : null;
+
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'Medium');
   const [status, setStatus] = useState<TaskStatus>(task?.status || 'Todo');
-  const [groupId, setGroupId] = useState(task?.groupId || (groups.length > 0 ? groups[0].id : ''));
+  const [groupId, setGroupId] = useState(task?.groupId || parentTask?.groupId || (groups.length > 0 ? groups[0].id : ''));
   const [dueDate, setDueDate] = useState(task?.dueDate ? task.dueDate.split('T')[0] : '');
   const [estimatedEffort, setEstimatedEffort] = useState(task?.estimatedEffort || '');
   const [dependencies, setDependencies] = useState<string[]>(task?.dependencies || []);
@@ -244,7 +246,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
           </div>
         </form>
 
-        {isEditing && (
+        {isEditing && !task.parentId && (
           <div style={{ marginTop: '32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3>Subtasks</h3>

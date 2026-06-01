@@ -77,105 +77,107 @@ const TaskCalendar = () => {
       </div>
 
       <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
-          {DAYS_OF_WEEK.map(day => (
-            <div key={day} style={{ padding: '12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              {day}
-            </div>
-          ))}
-        </div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: 'minmax(100px, 1fr)', flex: 1, overflowY: 'auto' }}>
-          {Array.from({ length: firstDay }).map((_, i) => (
-            <div key={`empty-${i}`} style={{ borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }} />
-          ))}
-          
-          {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day = i + 1;
-            
-            const tasksForDay = visibleTasks.filter(t => {
-              if (!t.dueDate) return false;
-              const dateStr = t.dueDate.split('T')[0];
-              const [ty, tm, td] = dateStr.split('-').map(Number);
-              return ty === year && tm - 1 === month && td === day;
-            });
-
-            const isToday = new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
-
-            return (
-              <div 
-                key={day} 
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, day)}
-                style={{ 
-                  borderRight: '1px solid var(--border-color)', 
-                  borderBottom: '1px solid var(--border-color)', 
-                  padding: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                  background: isToday ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
-                  transition: 'background 0.2s',
-                }}
-              >
-                <div style={{ 
-                  textAlign: 'right', 
-                  fontSize: '13px', 
-                  fontWeight: isToday ? 'bold' : 500,
-                  color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                  marginBottom: '2px',
-                  background: isToday ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  padding: '2px 6px',
-                  borderRadius: '12px',
-                  display: 'inline-block',
-                  alignSelf: 'flex-end'
-                }}>
-                  {day}
-                </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
-                  {tasksForDay.map(task => (
-                    <div
-                      key={task.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, task.id)}
-                      onClick={() => openTaskModal(task)}
-                      style={{
-                        padding: '6px 8px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        cursor: 'grab',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        borderLeft: `3px solid ${priorityColors[task.priority]}`,
-                        opacity: task.status === 'Done' ? 0.5 : 1,
-                        textDecoration: task.status === 'Done' ? 'line-through' : 'none',
-                        color: 'var(--text-primary)',
-                        transition: 'background 0.2s, transform 0.1s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                      title={task.title}
-                    >
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: statusColors[task.status] || 'var(--text-secondary)',
-                        flexShrink: 0
-                      }} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</span>
-                    </div>
-                  ))}
-                </div>
+        <div style={{ overflowX: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(130px, 1fr))', minWidth: '910px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
+            {DAYS_OF_WEEK.map(day => (
+              <div key={day} style={{ padding: '12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {day}
               </div>
-            );
-          })}
+            ))}
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(130px, 1fr))', gridAutoRows: 'minmax(100px, 1fr)', flex: 1, overflowY: 'auto', minWidth: '910px' }}>
+            {Array.from({ length: firstDay }).map((_, i) => (
+              <div key={`empty-${i}`} style={{ borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }} />
+            ))}
+            
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              
+              const tasksForDay = visibleTasks.filter(t => {
+                if (!t.dueDate) return false;
+                const dateStr = t.dueDate.split('T')[0];
+                const [ty, tm, td] = dateStr.split('-').map(Number);
+                return ty === year && tm - 1 === month && td === day;
+              });
+
+              const isToday = new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
+
+              return (
+                <div 
+                  key={day} 
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, day)}
+                  style={{ 
+                    borderRight: '1px solid var(--border-color)', 
+                    borderBottom: '1px solid var(--border-color)', 
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    background: isToday ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  <div style={{ 
+                    textAlign: 'right', 
+                    fontSize: '13px', 
+                    fontWeight: isToday ? 'bold' : 500,
+                    color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    marginBottom: '2px',
+                    background: isToday ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    padding: '2px 6px',
+                    borderRadius: '12px',
+                    display: 'inline-block',
+                    alignSelf: 'flex-end'
+                  }}>
+                    {day}
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
+                    {tasksForDay.map(task => (
+                      <div
+                        key={task.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task.id)}
+                        onClick={() => openTaskModal(task)}
+                        style={{
+                          padding: '6px 8px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          cursor: 'grab',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          borderLeft: `3px solid ${priorityColors[task.priority]}`,
+                          opacity: task.status === 'Done' ? 0.5 : 1,
+                          textDecoration: task.status === 'Done' ? 'line-through' : 'none',
+                          color: 'var(--text-primary)',
+                          transition: 'background 0.2s, transform 0.1s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                        title={task.title}
+                      >
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: statusColors[task.status] || 'var(--text-secondary)',
+                          flexShrink: 0
+                        }} />
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -61,5 +61,12 @@
     "type": "feature_update",
     "prompt": "Let's also set up email notifications about reminders since we already have that captured with google sign in. Use Resend.",
     "description": "Integrated automated email notifications using Supabase Edge Functions and Resend. Configured pg_cron to trigger a daily background job at 8:00 AM UTC to dispatch reminder summaries to users."
+  },
+  {
+    "id": 10,
+    "timestamp": "2026-05-31T18:55:15-07:00",
+    "type": "feature_update",
+    "prompt": "apply the enhancements to the project: fix Calendar width and horizontal scrolling, restrict nested subtasks in TaskModal, resolve UTC timezone discrepancy causing reminders to display one day early, and format subtasks inside reminders with visual hierarchy.",
+    "description": "Implemented task calendar, subtasks, and reminders enhancements: resolved UTC conversion offset issue in reminders, nested subtask creation restriction, horizontal scrolling and column lock on calendar view, and subtask visual indentation/hierarchy in the reminders panel."
   }
 ]

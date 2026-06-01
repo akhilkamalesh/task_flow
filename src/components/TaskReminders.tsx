@@ -2,7 +2,7 @@ import React from 'react';
 import { useTasks } from '../context/TaskContext';
 import type { Task } from '../types';
 
-import { formatDateLocal, getStartOfDay } from '../utils/dateUtils';
+import { formatDateLocal, getStartOfDay, parseDateLocal } from '../utils/dateUtils';
 
 
 const SubtaskItem = ({ subtask, updateTask, onOpenModal }: { subtask: Task, updateTask: (id: string, updates: Partial<Task>) => void, onOpenModal: (t: Task) => void }) => {
@@ -80,14 +80,32 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
     updateTask(task.id, { status: e.target.checked ? 'Done' : 'Todo' });
   };
 
+  const parentTask = task.parentId ? tasks.find(t => t.id === task.parentId) : null;
+
   return (
     <div 
       onClick={() => onOpenModal(task)}
       className="glass-panel"
-      style={{ padding: '16px', marginBottom: '12px', cursor: 'pointer', position: 'relative', overflow: 'hidden', opacity: !dependenciesMet ? 0.7 : 1, transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+      style={{ 
+        padding: '16px', 
+        marginBottom: '12px', 
+        cursor: 'pointer', 
+        position: 'relative', 
+        overflow: 'hidden', 
+        opacity: !dependenciesMet ? 0.7 : 1, 
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        marginLeft: task.parentId ? '32px' : '0',
+        borderLeft: task.parentId ? '3px solid var(--accent-primary)' : undefined
+      }}
     >
       {!dependenciesMet && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'var(--accent-warning)' }} title="Dependencies not met" />
+      )}
+      {parentTask && (
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>↳ Subtask of:</span>
+          <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{parentTask.title}</span>
+        </div>
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
         <span style={{ fontSize: '12px', fontWeight: 600, color: priorityColors[task.priority], background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '12px' }}>
@@ -144,7 +162,7 @@ const TaskReminders = () => {
     if (t.groupId && !selectedGroups.includes(t.groupId)) return false;
 
     // A task can be a reminder if its due date minus reminder days is today or earlier
-    const dueDate = new Date(t.dueDate);
+    const dueDate = parseDateLocal(t.dueDate);
     const reminderDate = new Date(dueDate);
     reminderDate.setDate(reminderDate.getDate() - t.reminderDays);
 
@@ -153,8 +171,8 @@ const TaskReminders = () => {
 
   const sortedTasks = reminderTasks.sort((a, b) => {
     // Due date
-    const dateA = new Date(a.dueDate!).getTime();
-    const dateB = new Date(b.dueDate!).getTime();
+    const dateA = parseDateLocal(a.dueDate!).getTime();
+    const dateB = parseDateLocal(b.dueDate!).getTime();
     if (dateA !== dateB) return dateA - dateB;
 
     // Priority

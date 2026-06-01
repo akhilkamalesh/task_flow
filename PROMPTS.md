@@ -13,3 +13,9 @@ The next step will be to create a backend in supabase rather than use local stor
 
 **Prompt:**
 "google login is enabled and configured the .env file" (Moving to next phase: Backend Migration)
+
+## [2026-05-31] Project Enhancements (Calendar, Subtasks, Reminders)
+
+**Prompt:**
+"using enhancement.md, apply the enhancements to the project. Make sure to follow AIINSTRUCTIONS.md when applying these enhancements and make sure to mark down each feature enhancement to the ledger"
+
