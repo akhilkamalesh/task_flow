@@ -19,3 +19,8 @@ The next step will be to create a backend in supabase rather than use local stor
 **Prompt:**
 "using enhancement.md, apply the enhancements to the project. Make sure to follow AIINSTRUCTIONS.md when applying these enhancements and make sure to mark down each feature enhancement to the ledger"
 
+## [2026-05-31] Board Enhancements
+
+**Prompt:**
+"apply enhancements for the board"
+

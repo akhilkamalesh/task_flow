@@ -68,5 +68,12 @@
     "type": "feature_update",
     "prompt": "apply the enhancements to the project: fix Calendar width and horizontal scrolling, restrict nested subtasks in TaskModal, resolve UTC timezone discrepancy causing reminders to display one day early, and format subtasks inside reminders with visual hierarchy.",
     "description": "Implemented task calendar, subtasks, and reminders enhancements: resolved UTC conversion offset issue in reminders, nested subtask creation restriction, horizontal scrolling and column lock on calendar view, and subtask visual indentation/hierarchy in the reminders panel."
+  },
+  {
+    "id": 11,
+    "timestamp": "2026-05-31T19:09:54-07:00",
+    "type": "feature_update",
+    "prompt": "apply enhancements for the board: Done column week-filtering and descending sorting.",
+    "description": "Updated the Kanban board Done column to filter and display only tasks completed/due within the last 7 days (archiving older tasks), and configured the Done column to sort tasks by date descending."
   }
 ]

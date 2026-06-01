@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTasks } from '../context/TaskContext';
 import type { Task, TaskStatus } from '../types';
-import { formatDateLocal } from '../utils/dateUtils';
+import { formatDateLocal, parseDateLocal } from '../utils/dateUtils';
 
 const statusColumns: TaskStatus[] = ['Todo', 'In Progress', 'Done'];
 
@@ -142,58 +142,85 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
   return (
     <>
       <div style={{ display: 'flex', gap: '24px', flex: 1, overflow: 'hidden' }}>
-        {statusColumns.map(status => (
-          <div 
-            key={status} 
-            className="glass-panel"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(26, 29, 36, 0.4)', borderRadius: '16px', overflow: 'hidden' }}
-            onDragOver={e => e.preventDefault()}
-            onDrop={e => handleDrop(e, status)}
-          >
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  background: statusColors[status] || 'var(--text-secondary)'
-                }} />
-                {status}
-              </div>
-              <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', minWidth: '24px', textAlign: 'center' }}>
-                {topLevelTasks.filter(t => t.status === status).length}
-              </span>
-            </div>
-            <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
-              {topLevelTasks.filter(t => t.status === status)
-                .sort((a, b) => {
-                  if (a.dueDate && b.dueDate) {
-                    const dateA = new Date(a.dueDate).getTime();
-                    const dateB = new Date(b.dueDate).getTime();
-                    if (dateA !== dateB) return dateA - dateB;
-                  } else if (a.dueDate) {
-                    return -1;
-                  } else if (b.dueDate) {
-                    return 1;
-                  }
+        {statusColumns.map(status => {
+          const columnTasks = topLevelTasks.filter(t => {
+            if (t.status !== status) return false;
+            if (status === 'Done') {
+              if (!t.dueDate) return true;
+              const completedDate = parseDateLocal(t.dueDate);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              completedDate.setHours(0, 0, 0, 0);
+              const diffTime = today.getTime() - completedDate.getTime();
+              const diffDays = diffTime / (1000 * 60 * 60 * 24);
+              return diffDays <= 7;
+            }
+            return true;
+          });
 
-                  const priorityWeight: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
-                  const priorityA = priorityWeight[a.priority] || 0;
-                  const priorityB = priorityWeight[b.priority] || 0;
-                  return priorityB - priorityA;
-                })
-                .map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  tasks={tasks} 
-                  updateTask={updateTask} 
-                  onOpenModal={(t) => document.dispatchEvent(new CustomEvent('edit-task-modal', { detail: t }))} 
-                />
-              ))}
+          return (
+            <div 
+              key={status} 
+              className="glass-panel"
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(26, 29, 36, 0.4)', borderRadius: '16px', overflow: 'hidden' }}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => handleDrop(e, status)}
+            >
+              <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: statusColors[status] || 'var(--text-secondary)'
+                  }} />
+                  {status}
+                </div>
+                <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', minWidth: '24px', textAlign: 'center' }}>
+                  {columnTasks.length}
+                </span>
+              </div>
+              <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
+                {columnTasks
+                  .sort((a, b) => {
+                    if (status === 'Done') {
+                      if (a.dueDate && b.dueDate) {
+                        return parseDateLocal(b.dueDate).getTime() - parseDateLocal(a.dueDate).getTime();
+                      } else if (a.dueDate) {
+                        return -1;
+                      } else if (b.dueDate) {
+                        return 1;
+                      }
+                      return 0;
+                    }
+                    if (a.dueDate && b.dueDate) {
+                      const dateA = parseDateLocal(a.dueDate).getTime();
+                      const dateB = parseDateLocal(b.dueDate).getTime();
+                      if (dateA !== dateB) return dateA - dateB;
+                    } else if (a.dueDate) {
+                      return -1;
+                    } else if (b.dueDate) {
+                      return 1;
+                    }
+
+                    const priorityWeight: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+                    const priorityA = priorityWeight[a.priority] || 0;
+                    const priorityB = priorityWeight[b.priority] || 0;
+                    return priorityB - priorityA;
+                  })
+                  .map(task => (
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    tasks={tasks} 
+                    updateTask={updateTask} 
+                    onOpenModal={(t) => document.dispatchEvent(new CustomEvent('edit-task-modal', { detail: t }))} 
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );
