@@ -5,6 +5,7 @@ import TaskCalendar from './TaskCalendar';
 import TaskReminders from './TaskReminders';
 import TaskModal from './TaskModal';
 import { TaskCard } from './TaskBoard';
+import { SearchBar } from './SearchBar';
 import type { ViewState, Task } from '../types';
 import { useState, useEffect } from 'react';
 
@@ -38,14 +39,43 @@ export const Dashboard = ({ currentView, onViewChange }: { currentView: ViewStat
       setIsModalOpen(true);
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Avoid triggering hotkeys when user is actively writing in a form/input
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.getAttribute('contenteditable') === 'true'
+      );
+      if (isTyping) return;
+
+      // Cmd+B or Ctrl+B toggles backlog drawer
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsBacklogOpen(prev => !prev);
+      }
+
+      // 'N', 'C', or Cmd+I / Ctrl+I opens new task modal
+      if (
+        ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'i') || 
+        e.key.toLowerCase() === 'n' || 
+        e.key.toLowerCase() === 'c'
+      ) {
+        e.preventDefault();
+        handleOpen();
+      }
+    };
+
     document.addEventListener('open-task-modal', handleOpen);
     document.addEventListener('open-subtask-modal', handleOpenSub);
     document.addEventListener('edit-task-modal', handleEdit);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('open-task-modal', handleOpen);
       document.removeEventListener('open-subtask-modal', handleOpenSub);
       document.removeEventListener('edit-task-modal', handleEdit);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -61,7 +91,8 @@ export const Dashboard = ({ currentView, onViewChange }: { currentView: ViewStat
         <main className="main-content">
           <header className="main-header glass-panel">
             <h2>{currentView === 'board' ? 'All Tasks' : currentView === 'calendar' ? 'Calendar' : 'Reminders'}</h2>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <SearchBar />
               {currentView === 'board' && (
                 <button 
                   className="btn-secondary" 
@@ -69,11 +100,17 @@ export const Dashboard = ({ currentView, onViewChange }: { currentView: ViewStat
                   style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
-                  Backlog {backlogTasks.length > 0 && `(${backlogTasks.length})`}
+                  <span>Backlog {backlogTasks.length > 0 && `(${backlogTasks.length})`}</span>
+                  <kbd className="btn-kbd">⌘B</kbd>
                 </button>
               )}
-              <button className="btn-primary" onClick={() => document.dispatchEvent(new CustomEvent('open-task-modal'))}>
-                + New Task
+              <button 
+                className="btn-primary" 
+                onClick={() => document.dispatchEvent(new CustomEvent('open-task-modal'))}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <span>+ New Task</span>
+                <kbd className="btn-kbd-primary">N</kbd>
               </button>
             </div>
           </header>

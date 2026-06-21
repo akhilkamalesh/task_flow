@@ -27,3 +27,9 @@ The next step will be to create a backend in supabase rather than use local stor
 
 **Prompt:**
 "Implement a backlog feature where tasks can be created but there isn't a concrete due date"
+
+## [2026-06-21] Vector Similarity Search Feature
+
+**Prompt:**
+"let's create a search bar functionality that can look for any task, including ones in backlog and ones that have been done and are not shown in the board. Here, let's utilize vector similarity to search for tasks"
+
