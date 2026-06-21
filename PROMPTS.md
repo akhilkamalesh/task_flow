@@ -23,4 +23,7 @@ The next step will be to create a backend in supabase rather than use local stor
 
 **Prompt:**
 "apply enhancements for the board"
+## [2026-06-20] Backlog Feature
 
+**Prompt:**
+"Implement a backlog feature where tasks can be created but there isn't a concrete due date"

@@ -104,8 +104,8 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !priority || !status || !dueDate || !estimatedEffort || (!parentId && !groupId)) {
-      setError('Please fill in all required fields (Title, Priority, Status, Due Date, Effort' + (!parentId ? ', and Group' : '') + ').');
+    if (!title.trim() || !priority || !status || !estimatedEffort || (!parentId && !groupId)) {
+      setError('Please fill in all required fields (Title, Priority, Status, Effort' + (!parentId ? ', and Group' : '') + ').');
       return;
     }
     
@@ -117,10 +117,10 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       priority,
       status,
       groupId,
-      dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       estimatedEffort,
       dependencies,
-      reminderDays,
+      reminderDays: dueDate ? reminderDays : 0,
       parentId: task?.parentId || parentId,
     };
 
@@ -184,8 +184,19 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
 
           <div style={{ display: 'flex', gap: '16px' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date *</label>
-              <input required type="date" min={new Date().toLocaleDateString('en-CA')} value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date (Optional)</label>
+                {dueDate && (
+                  <button 
+                    type="button" 
+                    onClick={() => setDueDate('')} 
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <input type="date" min={new Date().toLocaleDateString('en-CA')} value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
             </div>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Effort * (e.g. 2h)</label>
@@ -212,15 +223,27 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Reminder (Days before due date)</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: !dueDate ? 'rgba(148, 163, 184, 0.4)' : 'var(--text-secondary)' }}>Reminder (Days before due date)</label>
             <input 
               type="number" 
               min="0" 
-              value={reminderDays} 
+              disabled={!dueDate}
+              value={dueDate ? reminderDays : 0} 
               onChange={e => setReminderDays(parseInt(e.target.value) || 0)} 
-              style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} 
+              style={{ 
+                width: '100%', 
+                background: !dueDate ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)', 
+                border: '1px solid var(--border-color)', 
+                color: !dueDate ? 'rgba(255,255,255,0.2)' : 'white', 
+                padding: '12px', 
+                borderRadius: '8px', 
+                outline: 'none',
+                cursor: !dueDate ? 'not-allowed' : 'text'
+              }} 
             />
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Enter 0 for same-day reminder</span>
+            <span style={{ fontSize: '12px', color: !dueDate ? 'rgba(148, 163, 184, 0.3)' : 'var(--text-secondary)' }}>
+              {!dueDate ? 'Set a due date to enable reminders' : 'Enter 0 for same-day reminder'}
+            </span>
           </div>
 
           <div>

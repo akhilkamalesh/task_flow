@@ -5,24 +5,6 @@ import { formatDateLocal, parseDateLocal } from '../utils/dateUtils';
 
 const statusColumns: TaskStatus[] = ['Todo', 'In Progress', 'Done'];
 
-const TaskBoard = () => {
-  const { tasks, updateTask, selectedGroups } = useTasks();
-
-  const topLevelTasks = tasks.filter(t => !t.parentId && (t.groupId ? selectedGroups.includes(t.groupId) : true));
-
-  const statusColors: Record<string, string> = {
-    Todo: 'var(--text-secondary)',
-    'In Progress': 'var(--accent-primary)',
-    Done: 'var(--accent-success)',
-  };
-
-  const handleDrop = (e: React.DragEvent, status: TaskStatus) => {
-    const taskId = e.dataTransfer.getData('taskId');
-    if (taskId) {
-      updateTask(taskId, { status });
-    }
-  };
-
 const SubtaskItem = ({ subtask, updateTask, onOpenModal }: { subtask: Task, updateTask: (id: string, updates: Partial<Task>) => void, onOpenModal: (t: Task) => void }) => {
   const handleCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -78,7 +60,7 @@ const SubtaskItem = ({ subtask, updateTask, onOpenModal }: { subtask: Task, upda
   );
 };
 
-const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks: Task[], updateTask: (id: string, updates: Partial<Task>) => void, onOpenModal: (t: Task) => void }) => {
+export const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks: Task[], updateTask: (id: string, updates: Partial<Task>) => void, onOpenModal: (t: Task) => void }) => {
   const subtasks = tasks.filter(t => t.parentId === task.id);
   const completedSubtasks = subtasks.filter(t => t.status === 'Done').length;
   
@@ -112,7 +94,11 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
         <span style={{ fontSize: '12px', fontWeight: 600, color: priorityColors[task.priority], background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '12px' }}>
           {task.priority}
         </span>
-        {task.dueDate && <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{formatDateLocal(task.dueDate)}</span>}
+        {task.dueDate ? (
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{formatDateLocal(task.dueDate)}</span>
+        ) : (
+          <span style={{ fontSize: '11px', color: 'var(--accent-warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 8px', borderRadius: '4px', fontWeight: 500 }}>Backlog</span>
+        )}
       </div>
       <h4 style={{ marginBottom: '8px', color: task.status === 'Done' ? 'var(--text-secondary)' : 'white', textDecoration: task.status === 'Done' ? 'line-through' : 'none' }}>{task.title}</h4>
       
@@ -138,6 +124,28 @@ const TaskCard = ({ task, tasks, updateTask, onOpenModal }: { task: Task, tasks:
     </div>
   );
 };
+
+const TaskBoard = () => {
+  const { tasks, updateTask, selectedGroups } = useTasks();
+
+  const topLevelTasks = tasks.filter(t => {
+    if (t.parentId) return false;
+    if (t.groupId && !selectedGroups.includes(t.groupId)) return false;
+    return !!t.dueDate;
+  });
+
+  const statusColors: Record<string, string> = {
+    Todo: 'var(--text-secondary)',
+    'In Progress': 'var(--accent-primary)',
+    Done: 'var(--accent-success)',
+  };
+
+  const handleDrop = (e: React.DragEvent, status: TaskStatus) => {
+    const taskId = e.dataTransfer.getData('taskId');
+    if (taskId) {
+      updateTask(taskId, { status });
+    }
+  };
 
   return (
     <>

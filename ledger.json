@@ -75,5 +75,12 @@
     "type": "feature_update",
     "prompt": "apply enhancements for the board: Done column week-filtering and descending sorting.",
     "description": "Updated the Kanban board Done column to filter and display only tasks completed/due within the last 7 days (archiving older tasks), and configured the Done column to sort tasks by date descending."
+  },
+  {
+    "id": 12,
+    "timestamp": "2026-06-20T22:40:00-07:00",
+    "type": "feature",
+    "prompt": "Implement a backlog feature where tasks can be created but there isn't a concrete due date",
+    "description": "Implemented backlog feature by making task due date optional in the TaskModal UI and DB context, rendering a Backlog badge on unscheduled tasks in the Kanban board, and adding a dedicated Backlog view and sidebar navigation tab with active task count indicator."
   }
 ]

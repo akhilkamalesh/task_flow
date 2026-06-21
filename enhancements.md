@@ -14,6 +14,8 @@
 
 ## Subtasks
 1. DONE - Subtasks should not have the ability to create nested subtasks. This should be the smallest unit of work.
+2. Subtasks hours must be less than or equal to the hours of the parent task -- if it doesn't equal, adjust the parent tasks hours to be the same as the sum of the subtasks
+
 
 ## Tags
 

@@ -10,7 +10,7 @@ export interface Task {
   description?: string;
   groupId?: string;
   priority: TaskPriority;
-  dueDate?: string; // ISO string
+  dueDate?: string | null; // ISO string
   estimatedEffort?: string; // e.g. "2h", "1d"
   status: TaskStatus;
   parentId?: string; // For subtasks
