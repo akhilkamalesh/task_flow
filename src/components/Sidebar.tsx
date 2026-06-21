@@ -31,6 +31,8 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
     return getStartOfDay(reminderDate) <= today;
   }).length;
 
+
+
   const handleAddGroup = (e: React.FormEvent) => {
     e.preventDefault();
     if (newGroupName.trim()) {

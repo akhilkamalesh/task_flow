@@ -75,5 +75,19 @@
     "type": "feature_update",
     "prompt": "apply enhancements for the board: Done column week-filtering and descending sorting.",
     "description": "Updated the Kanban board Done column to filter and display only tasks completed/due within the last 7 days (archiving older tasks), and configured the Done column to sort tasks by date descending."
+  },
+  {
+    "id": 12,
+    "timestamp": "2026-06-20T22:40:00-07:00",
+    "type": "feature",
+    "prompt": "Implement a backlog feature where tasks can be created but there isn't a concrete due date",
+    "description": "Implemented backlog feature by making task due date optional in the TaskModal UI and DB context, rendering a Backlog badge on unscheduled tasks in the Kanban board, and adding a dedicated Backlog view and sidebar navigation tab with active task count indicator."
+  },
+  {
+    "id": 13,
+    "timestamp": "2026-06-21T06:02:00Z",
+    "type": "feature",
+    "prompt": "let's create a search bar functionality that can look for any task, including ones in backlog and ones that have been done and are not shown in the board. Here, let's utilize vector similarity to search for tasks",
+    "description": "Implemented a global search bar with a glassmorphic spotlight modal, keyboard shortcuts (Cmd+K / Ctrl+K), and a client-side TF-IDF Cosine Similarity vector search engine capable of matching active, backlog, and archived/done tasks."
   }
 ]
