@@ -11,6 +11,7 @@
 1. DONE - The calendar UI is spread based on the length of the tasks. Make it so that the width of each day is fixed and you can horizontally scroll to see what tasks is there or just truncate the task name with ... to fit
 
 ## Tasks
+1. Add a recurring task functionality based on time period
 
 ## Subtasks
 1. DONE - Subtasks should not have the ability to create nested subtasks. This should be the smallest unit of work.
@@ -22,5 +23,11 @@
 ## Reminders
 1. DONE - The tasks in reminder section are a day ahead. This could be because something is getting tracked in UTC instead of local? Investigate
 2. DONE - Subtasks in reminders should be indented or at least have a clear visual hierarchy to indicate that they are subtasks. 
+
+## Backlog
+1. The tasks in backlog get smushed. make this a scrollable view rather than trying to fit in screen.
+2. Have a clickable button within backlog shelf that allows you to select multiple backlog items to either delete or add a date
+
+
 
 

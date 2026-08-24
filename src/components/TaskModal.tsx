@@ -289,6 +289,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
             )}
           </div>
         )}
+
       </div>
     </div>
   );

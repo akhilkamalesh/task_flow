@@ -89,5 +89,19 @@
     "type": "feature",
     "prompt": "let's create a search bar functionality that can look for any task, including ones in backlog and ones that have been done and are not shown in the board. Here, let's utilize vector similarity to search for tasks",
     "description": "Implemented a global search bar with a glassmorphic spotlight modal, keyboard shortcuts (Cmd+K / Ctrl+K), and a client-side TF-IDF Cosine Similarity vector search engine capable of matching active, backlog, and archived/done tasks."
+  },
+  {
+    "id": 14,
+    "timestamp": "2026-06-22T20:30:00Z",
+    "type": "feature",
+    "prompt": "Create a feature called quick notes. This will be a tab underneath reminders. What I am envision is a text sandbox (sort of like notion or onenote) where I can just type text as notes then be able to link the relevant note to a task. Also, based on notes, I want a feature that can create a task. For example, if the note was captured as meeting minutes and it says create PRD for wallet estimations, there should be the ability to synthesize the note and create a task based off that. The synthesization could be an ai agent, where you can hover over the text and it will give you options to link to task or create new task (create new task will invoke an agent to read over the note and create a task based on the information provided)",
+    "description": "Implemented the Quick Notes sandbox view with Notion-style editor interface, text selection floating actions (Link to Task, AI Task), bidirectional task-note linking displayed in both views, custom event routing, and an animated AI Synthesizer side panel with Gemini integration and local NLP fallback."
+  },
+  {
+    "id": 15,
+    "timestamp": "2026-08-24T11:47:55+05:30",
+    "type": "feature_update",
+    "prompt": "Let's archive the quick notes functionality",
+    "description": "Retired the Quick Notes feature from the application: removed Sidebar nav button, Dashboard conditional notes view, and TaskModal linked notes view. Deleted unused files QuickNotes.tsx, NoteContext.tsx, and aiSynthesizer.ts."
   }
 ]

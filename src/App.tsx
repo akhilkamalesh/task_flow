@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TaskProvider } from './context/TaskContext';
 import { useAuth } from './context/AuthContext';
 import { Login } from './components/auth/Login';
@@ -10,6 +10,15 @@ import type { ViewState } from './types';
 function App() {
   const { user, loading } = useAuth();
   const [currentView, setCurrentView] = useState<ViewState>('board');
+
+  useEffect(() => {
+    const handleChangeView = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setCurrentView(customEvent.detail);
+    };
+    window.addEventListener('change-view', handleChangeView);
+    return () => window.removeEventListener('change-view', handleChangeView);
+  }, []);
 
   if (loading) {
     return (
