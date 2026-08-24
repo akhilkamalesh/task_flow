@@ -304,7 +304,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
             priority: currentTask.priority,
             status: 'Todo' as TaskStatus,
             groupId: currentTask.groupId,
-            dueDate: currentTask.dueDate,
+            dueDate: nextOccurrence.toISOString(),
             estimatedEffort: currentTask.estimatedEffort,
             dependencies: currentTask.dependencies,
             reminderDays: currentTask.reminderDays,

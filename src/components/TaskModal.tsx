@@ -130,6 +130,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
   const [recurrenceBase, setRecurrenceBase] = useState<'daily' | 'weekly' | 'monthly' | null>(initialParts.base);
   const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState<string>(initialParts.dayOfWeek);
   const [recurrenceDayOfMonth, setRecurrenceDayOfMonth] = useState<number>(initialParts.dayOfMonth);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState(task?.recurrenceEndDate ? task.recurrenceEndDate.split('T')[0] : '');
   const [error, setError] = useState('');
 
   const isEditing = !!task;
@@ -153,7 +154,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       return;
     }
 
-    if (recurrenceBase && !dueDate) {
+    if (recurrenceBase && !recurrenceEndDate) {
       setError('Please set an End Date for the recurring task.');
       return;
     }
@@ -181,8 +182,8 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       reminderDays: dueDate ? reminderDays : 0,
       parentId: task?.parentId || parentId,
       recurrence: recurrenceValue,
-      recurrenceEndDate: recurrenceValue && dueDate ? new Date(dueDate).toISOString() : null,
-      recurrenceOccurrenceDate: task?.recurrenceOccurrenceDate || new Date().toISOString()
+      recurrenceEndDate: recurrenceValue && recurrenceEndDate ? new Date(recurrenceEndDate).toISOString() : null,
+      recurrenceOccurrenceDate: task?.recurrenceOccurrenceDate || (dueDate ? new Date(dueDate).toISOString() : new Date().toISOString())
     };
 
     if (isEditing && task) {
@@ -277,10 +278,43 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
+          {recurrenceBase ? (
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date (Optional)</label>
+                  {dueDate && (
+                    <button 
+                      type="button" 
+                      onClick={() => setDueDate('')} 
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <input type="date" min={new Date().toLocaleDateString('en-CA')} value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>End Date *</label>
+                  {recurrenceEndDate && (
+                    <button 
+                      type="button" 
+                      onClick={() => setRecurrenceEndDate('')} 
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <input type="date" min={new Date().toLocaleDateString('en-CA')} value={recurrenceEndDate} onChange={e => setRecurrenceEndDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+              </div>
+            </div>
+          ) : (
+            <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{recurrenceBase ? 'End Date *' : 'Due Date (Optional)'}</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date (Optional)</label>
                 {dueDate && (
                   <button 
                     type="button" 
@@ -293,11 +327,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
               </div>
               <input type="date" min={new Date().toLocaleDateString('en-CA')} value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Effort * (e.g. 2h)</label>
-              <input required type="text" value={estimatedEffort} onChange={e => setEstimatedEffort(e.target.value)} placeholder="e.g. 2h, 1d" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
-            </div>
-          </div>
+          )}
 
           {!parentId && (
             <div>
@@ -308,6 +338,11 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
               </select>
             </div>
           )}
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Effort * (e.g. 2h)</label>
+            <input required type="text" value={estimatedEffort} onChange={e => setEstimatedEffort(e.target.value)} placeholder="e.g. 2h, 1d" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+          </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Dependencies</label>
