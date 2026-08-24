@@ -210,6 +210,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       titleToSave = `${baseTitle} ${formattedDate}`;
     }
     
+    const depsToSave = taskData.status === 'Done' ? [] : (taskData.dependencies || []).filter(depId => {
+      const depTask = tasks.find(t => t.id === depId);
+      return depTask && depTask.status !== 'Done' && depTask.dueDate;
+    });
+
     const { data, error } = await supabase
       .from('tasks')
       .insert({
@@ -221,7 +226,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         estimated_effort: taskData.estimatedEffort,
         status: taskData.status,
         parent_id: taskData.parentId,
-        dependencies: taskData.dependencies,
+        dependencies: depsToSave,
         reminder_days: taskData.reminderDays || 0,
         user_id: user.id,
         recurrence: taskData.recurrence,
@@ -236,6 +241,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     const newTask: Task = {
       ...taskData,
       title: titleToSave,
+      dependencies: depsToSave,
       id: data.id,
       createdAt: data.created_at,
       recurrenceOccurrenceDate: occurrenceDateToSave
@@ -328,6 +334,32 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
+    // Enforce dependency constraints:
+    // 1. If a task becomes Done, it cannot have dependencies.
+    if (updates.status === 'Done') {
+      updates.dependencies = [];
+      supabaseUpdates.dependencies = [];
+    }
+
+    // 2. If a task becomes Done or its due date is cleared, remove it from other tasks' dependencies list.
+    if (updates.status === 'Done' || updates.dueDate === null) {
+      const dependentTasks = tasks.filter(t => t.dependencies && t.dependencies.includes(id));
+      for (const depTask of dependentTasks) {
+        const cleanedDeps = depTask.dependencies.filter(depId => depId !== id);
+        await supabase
+          .from('tasks')
+          .update({ dependencies: cleanedDeps })
+          .eq('id', depTask.id);
+      }
+    }
+
+    // 3. Ensure any updated dependencies only include non-Done tasks with a due date.
+    if (updates.dependencies !== undefined) {
+      const allowedTaskIds = new Set(tasks.filter(t => t.status !== 'Done' && t.dueDate).map(t => t.id));
+      updates.dependencies = updates.dependencies.filter(depId => allowedTaskIds.has(depId));
+      supabaseUpdates.dependencies = updates.dependencies;
+    }
+
     const { error } = await supabase
       .from('tasks')
       .update(supabaseUpdates)
@@ -335,7 +367,17 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) throw error;
 
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    setTasks(prev => prev.map(t => {
+      let updatedTask = t;
+      if (t.id === id) {
+        updatedTask = { ...updatedTask, ...updates };
+      }
+      const shouldRemoveAsDep = (updates.status === 'Done') || (updates.dueDate === null);
+      if (shouldRemoveAsDep && t.dependencies && t.dependencies.includes(id)) {
+        updatedTask = { ...updatedTask, dependencies: t.dependencies.filter(depId => depId !== id) };
+      }
+      return updatedTask;
+    }));
   };
 
   const deleteTask = async (id: string) => {

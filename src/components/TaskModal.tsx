@@ -193,7 +193,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
     onClose();
   };
 
-  const possibleDependencies = tasks.filter(t => t.id !== task?.id && !t.parentId);
+  const possibleDependencies = tasks.filter(t => t.id !== task?.id && !t.parentId && t.status !== 'Done' && t.dueDate);
   const subtasks = task ? tasks.filter(t => t.parentId === task.id) : [];
 
   return (
@@ -235,7 +235,13 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
             </div>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Status *</label>
-              <select required value={status} onChange={e => setStatus(e.target.value as TaskStatus)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}>
+              <select required value={status} onChange={e => {
+                const newStatus = e.target.value as TaskStatus;
+                setStatus(newStatus);
+                if (newStatus === 'Done') {
+                  setDependencies([]);
+                }
+              }} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}>
                 <option value="Todo">Todo</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Done">Done</option>
@@ -310,11 +316,19 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
           )}
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Dependencies</label>
-            <select multiple value={dependencies} onChange={e => setDependencies(Array.from(e.target.selectedOptions, option => option.value))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', minHeight: '80px' }}>
-              {possibleDependencies.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-            </select>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Hold Ctrl/Cmd to select multiple</span>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: status === 'Done' ? 'rgba(148, 163, 184, 0.4)' : 'var(--text-secondary)' }}>Dependencies</label>
+            {status === 'Done' ? (
+              <div style={{ padding: '12px', borderRadius: '8px', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)', fontSize: '14px', background: 'rgba(255,255,255,0.02)' }}>
+                Completed tasks cannot have dependencies.
+              </div>
+            ) : (
+              <>
+                <select multiple value={dependencies} onChange={e => setDependencies(Array.from(e.target.selectedOptions, option => option.value))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', minHeight: '80px' }}>
+                  {possibleDependencies.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Hold Ctrl/Cmd to select multiple</span>
+              </>
+            )}
           </div>
 
           <div>
