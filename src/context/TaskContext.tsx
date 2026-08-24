@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
-import type { Task, Group } from '../types';
+import type { Task, Group, TaskStatus } from '../types';
+import { calculateNextOccurrence, formatRecurrenceDate, getBaseTitle } from '../utils/recurrenceUtils';
 
 interface TaskContextType {
   tasks: Task[];
@@ -71,7 +72,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         parentId: t.parent_id,
         dependencies: t.dependencies || [],
         createdAt: t.created_at,
-        reminderDays: t.reminder_days
+        reminderDays: t.reminder_days,
+        recurrence: t.recurrence,
+        recurrenceEndDate: t.recurrence_end_date,
+        recurrenceOccurrenceDate: t.recurrence_occurrence_date
       }));
 
       setGroups(mappedGroups);
@@ -193,11 +197,23 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   const addTask = async (taskData: Omit<Task, 'id' | 'createdAt'>) => {
     if (!user) return;
+
+    let titleToSave = taskData.title;
+    let occurrenceDateToSave = taskData.recurrenceOccurrenceDate;
+
+    if (taskData.recurrence) {
+      if (!occurrenceDateToSave) {
+        occurrenceDateToSave = new Date().toISOString();
+      }
+      const baseTitle = getBaseTitle(titleToSave);
+      const formattedDate = formatRecurrenceDate(new Date(occurrenceDateToSave));
+      titleToSave = `${baseTitle} ${formattedDate}`;
+    }
     
     const { data, error } = await supabase
       .from('tasks')
       .insert({
-        title: taskData.title,
+        title: titleToSave,
         description: taskData.description,
         group_id: taskData.groupId,
         priority: taskData.priority,
@@ -207,7 +223,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         parent_id: taskData.parentId,
         dependencies: taskData.dependencies,
         reminder_days: taskData.reminderDays || 0,
-        user_id: user.id
+        user_id: user.id,
+        recurrence: taskData.recurrence,
+        recurrence_end_date: taskData.recurrenceEndDate,
+        recurrence_occurrence_date: occurrenceDateToSave
       })
       .select()
       .single();
@@ -216,8 +235,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     
     const newTask: Task = {
       ...taskData,
+      title: titleToSave,
       id: data.id,
       createdAt: data.created_at,
+      recurrenceOccurrenceDate: occurrenceDateToSave
     };
     setTasks(prev => [...prev, newTask]);
   };
@@ -236,6 +257,76 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     if (updates.parentId !== undefined) supabaseUpdates.parent_id = updates.parentId;
     if (updates.dependencies !== undefined) supabaseUpdates.dependencies = updates.dependencies;
     if (updates.reminderDays !== undefined) supabaseUpdates.reminder_days = updates.reminderDays;
+    
+    if (updates.recurrence !== undefined) supabaseUpdates.recurrence = updates.recurrence;
+    if (updates.recurrenceEndDate !== undefined) supabaseUpdates.recurrence_end_date = updates.recurrenceEndDate;
+    if (updates.recurrenceOccurrenceDate !== undefined) supabaseUpdates.recurrence_occurrence_date = updates.recurrenceOccurrenceDate;
+
+    const currentTask = tasks.find(t => t.id === id);
+    
+    // Formatting title if recurrence or title changes
+    let titleToSave = updates.title !== undefined ? updates.title : currentTask?.title;
+    if (titleToSave !== undefined) {
+      const activeRecurrence = updates.recurrence !== undefined ? updates.recurrence : currentTask?.recurrence;
+      const activeOccurrenceDate = updates.recurrenceOccurrenceDate !== undefined ? updates.recurrenceOccurrenceDate : currentTask?.recurrenceOccurrenceDate;
+
+      if (activeRecurrence && activeOccurrenceDate) {
+        const baseTitle = getBaseTitle(titleToSave);
+        const formattedDate = formatRecurrenceDate(new Date(activeOccurrenceDate));
+        titleToSave = `${baseTitle} ${formattedDate}`;
+        updates.title = titleToSave;
+        supabaseUpdates.title = titleToSave;
+      } else if (updates.recurrence === null || (currentTask?.recurrence && updates.recurrence === null)) {
+        // If recurrence is explicitly set to null, strip the date suffix from title
+        updates.title = getBaseTitle(titleToSave);
+        supabaseUpdates.title = updates.title;
+      }
+    }
+
+    // Handle next recurrence spawning if task status is updated to Done
+    if (currentTask && updates.status === 'Done') {
+      const activeRecurrence = updates.recurrence !== undefined ? updates.recurrence : currentTask.recurrence;
+      const activeEndDate = updates.recurrenceEndDate !== undefined ? updates.recurrenceEndDate : currentTask.recurrenceEndDate;
+      const activeOccurrenceDate = updates.recurrenceOccurrenceDate !== undefined ? updates.recurrenceOccurrenceDate : currentTask.recurrenceOccurrenceDate;
+
+      if (activeRecurrence && activeEndDate && activeOccurrenceDate) {
+        const nextOccurrence = calculateNextOccurrence(activeOccurrenceDate, activeRecurrence);
+        const endDateObj = new Date(activeEndDate);
+        
+        const nextTime = new Date(nextOccurrence.getFullYear(), nextOccurrence.getMonth(), nextOccurrence.getDate()).getTime();
+        const endTime = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), endDateObj.getDate()).getTime();
+
+        if (nextTime <= endTime) {
+          // Spawn next task (copies same group, priority, effort, desc, due date/end date, recurrence)
+          const nextTaskData = {
+            title: getBaseTitle(currentTask.title),
+            description: currentTask.description || '',
+            priority: currentTask.priority,
+            status: 'Todo' as TaskStatus,
+            groupId: currentTask.groupId,
+            dueDate: currentTask.dueDate,
+            estimatedEffort: currentTask.estimatedEffort,
+            dependencies: currentTask.dependencies,
+            reminderDays: currentTask.reminderDays,
+            parentId: currentTask.parentId,
+            recurrence: activeRecurrence,
+            recurrenceEndDate: activeEndDate,
+            recurrenceOccurrenceDate: nextOccurrence.toISOString()
+          };
+          
+          addTask(nextTaskData).catch(err => console.error("Error spawning next occurrence:", err));
+        }
+
+        // Clear recurrence settings on completed task so it doesn't double spawn
+        updates.recurrence = null;
+        updates.recurrenceEndDate = null;
+        updates.recurrenceOccurrenceDate = null;
+        
+        supabaseUpdates.recurrence = null;
+        supabaseUpdates.recurrence_end_date = null;
+        supabaseUpdates.recurrence_occurrence_date = null;
+      }
+    }
 
     const { error } = await supabase
       .from('tasks')

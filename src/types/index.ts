@@ -32,6 +32,9 @@ export interface Task {
   dependencies: string[]; // Array of task IDs
   createdAt: string;
   reminderDays?: number; // Days before due date
+  recurrence?: string | null;
+  recurrenceEndDate?: string | null;
+  recurrenceOccurrenceDate?: string | null;
 }
 
 export interface Group {

@@ -12,6 +12,8 @@
 
 ## Tasks
 1. Add a recurring task functionality based on time period
+2. Remove estimated effort (or rather enhance this for it to be useful)
+3. Clean up dependencies functionality - maybe instead use visualization / tasks that are todo or In Progress for it to be a dependency?
 
 ## Subtasks
 1. DONE - Subtasks should not have the ability to create nested subtasks. This should be the smallest unit of work.

@@ -97,9 +97,53 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
   const [estimatedEffort, setEstimatedEffort] = useState(task?.estimatedEffort || '');
   const [dependencies, setDependencies] = useState<string[]>(task?.dependencies || []);
   const [reminderDays, setReminderDays] = useState<number>(task?.reminderDays || 0);
+  const getRecurrenceParts = () => {
+    if (!task?.recurrence) {
+      return { 
+        base: null as 'daily' | 'weekly' | 'monthly' | null, 
+        dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }), 
+        dayOfMonth: new Date().getDate() 
+      };
+    }
+    if (task.recurrence.startsWith('weekly:')) {
+      return { 
+        base: 'weekly' as const, 
+        dayOfWeek: task.recurrence.split(':')[1], 
+        dayOfMonth: new Date().getDate() 
+      };
+    }
+    if (task.recurrence.startsWith('monthly:')) {
+      return { 
+        base: 'monthly' as const, 
+        dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }), 
+        dayOfMonth: parseInt(task.recurrence.split(':')[1], 10) 
+      };
+    }
+    return { 
+      base: task.recurrence as 'daily' | 'weekly' | 'monthly', 
+      dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }), 
+      dayOfMonth: new Date().getDate() 
+    };
+  };
+
+  const initialParts = getRecurrenceParts();
+  const [recurrenceBase, setRecurrenceBase] = useState<'daily' | 'weekly' | 'monthly' | null>(initialParts.base);
+  const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState<string>(initialParts.dayOfWeek);
+  const [recurrenceDayOfMonth, setRecurrenceDayOfMonth] = useState<number>(initialParts.dayOfMonth);
   const [error, setError] = useState('');
 
   const isEditing = !!task;
+
+  const handleRecurrenceBaseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as 'daily' | 'weekly' | 'monthly' | '';
+    if (recurrenceBase && value === '') {
+      const confirmEnd = window.confirm("Are you sure you want to end the recurring tasks?");
+      if (!confirmEnd) {
+        return; // Cancel change
+      }
+    }
+    setRecurrenceBase(value || null);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +152,22 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       setError('Please fill in all required fields (Title, Priority, Status, Effort' + (!parentId ? ', and Group' : '') + ').');
       return;
     }
+
+    if (recurrenceBase && !dueDate) {
+      setError('Please set an End Date for the recurring task.');
+      return;
+    }
     
     setError('');
+
+    let recurrenceValue: string | null = null;
+    if (recurrenceBase === 'daily') {
+      recurrenceValue = 'daily';
+    } else if (recurrenceBase === 'weekly') {
+      recurrenceValue = `weekly:${recurrenceDayOfWeek}`;
+    } else if (recurrenceBase === 'monthly') {
+      recurrenceValue = `monthly:${recurrenceDayOfMonth}`;
+    }
 
     const taskData = {
       title,
@@ -122,6 +180,9 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       dependencies,
       reminderDays: dueDate ? reminderDays : 0,
       parentId: task?.parentId || parentId,
+      recurrence: recurrenceValue,
+      recurrenceEndDate: recurrenceValue && dueDate ? new Date(dueDate).toISOString() : null,
+      recurrenceOccurrenceDate: task?.recurrenceOccurrenceDate || new Date().toISOString()
     };
 
     if (isEditing && task) {
@@ -184,8 +245,42 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
 
           <div style={{ display: 'flex', gap: '16px' }}>
             <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Recurrence</label>
+              <select value={recurrenceBase || ''} onChange={handleRecurrenceBaseChange} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}>
+                <option value="">None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            
+            {recurrenceBase === 'weekly' && (
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Repeat On</label>
+                <select value={recurrenceDayOfWeek} onChange={e => setRecurrenceDayOfWeek(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}>
+                  {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {recurrenceBase === 'monthly' && (
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Repeat Day of Month</label>
+                <select value={recurrenceDayOfMonth} onChange={e => setRecurrenceDayOfMonth(parseInt(e.target.value, 10))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date (Optional)</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{recurrenceBase ? 'End Date *' : 'Due Date (Optional)'}</label>
                 {dueDate && (
                   <button 
                     type="button" 
