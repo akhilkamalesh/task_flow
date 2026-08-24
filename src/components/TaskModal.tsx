@@ -13,7 +13,7 @@ import { formatDateLocal } from '../utils/dateUtils';
 
 const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTask: (id: string, data: Partial<Task>) => void, onClose: () => void }) => {
   const [expanded, setExpanded] = useState(false);
-  
+
   const handleCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     updateTask(subtask.id, { status: e.target.checked ? 'Done' : 'Todo' });
@@ -21,20 +21,20 @@ const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTa
 
   return (
     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-      <div 
-        onClick={() => setExpanded(!expanded)} 
+      <div
+        onClick={() => setExpanded(!expanded)}
         style={{ display: 'flex', alignItems: 'center', padding: '12px', cursor: 'pointer', gap: '12px' }}
       >
-        <input 
-          type="checkbox" 
-          checked={subtask.status === 'Done'} 
-          onChange={handleCheck} 
+        <input
+          type="checkbox"
+          checked={subtask.status === 'Done'}
+          onChange={handleCheck}
           onClick={e => e.stopPropagation()}
           style={{ width: '16px', height: '16px', cursor: 'pointer' }}
         />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <span style={{ 
-            textDecoration: subtask.status === 'Done' ? 'line-through' : 'none', 
+          <span style={{
+            textDecoration: subtask.status === 'Done' ? 'line-through' : 'none',
             color: subtask.status === 'Done' ? 'var(--text-secondary)' : 'white',
             fontWeight: 500
           }}>
@@ -50,7 +50,7 @@ const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTa
           {expanded ? '▲' : '▼'}
         </span>
       </div>
-      
+
       {expanded && (
         <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)', fontSize: '14px', color: 'var(--text-secondary)' }}>
           {subtask.description ? (
@@ -64,18 +64,18 @@ const SubtaskItem = ({ subtask, updateTask, onClose }: { subtask: Task, updateTa
             {subtask.estimatedEffort && <span><strong>Effort:</strong> {subtask.estimatedEffort}</span>}
           </div>
           <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-             <button 
-               type="button"
-               className="btn-secondary" 
-               style={{ padding: '6px 12px', fontSize: '12px' }}
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onClose();
-                 setTimeout(() => document.dispatchEvent(new CustomEvent('edit-task-modal', { detail: subtask })), 100);
-               }}
-             >
-               Edit Full Task
-             </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '12px' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+                setTimeout(() => document.dispatchEvent(new CustomEvent('edit-task-modal', { detail: subtask })), 100);
+              }}
+            >
+              Edit Full Task
+            </button>
           </div>
         </div>
       )}
@@ -99,30 +99,30 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
   const [reminderDays, setReminderDays] = useState<number>(task?.reminderDays || 0);
   const getRecurrenceParts = () => {
     if (!task?.recurrence) {
-      return { 
-        base: null as 'daily' | 'weekly' | 'monthly' | null, 
-        dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }), 
-        dayOfMonth: new Date().getDate() 
+      return {
+        base: null as 'daily' | 'weekly' | 'monthly' | null,
+        dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+        dayOfMonth: new Date().getDate()
       };
     }
     if (task.recurrence.startsWith('weekly:')) {
-      return { 
-        base: 'weekly' as const, 
-        dayOfWeek: task.recurrence.split(':')[1], 
-        dayOfMonth: new Date().getDate() 
+      return {
+        base: 'weekly' as const,
+        dayOfWeek: task.recurrence.split(':')[1],
+        dayOfMonth: new Date().getDate()
       };
     }
     if (task.recurrence.startsWith('monthly:')) {
-      return { 
-        base: 'monthly' as const, 
-        dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }), 
-        dayOfMonth: parseInt(task.recurrence.split(':')[1], 10) 
+      return {
+        base: 'monthly' as const,
+        dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+        dayOfMonth: parseInt(task.recurrence.split(':')[1], 10)
       };
     }
-    return { 
-      base: task.recurrence as 'daily' | 'weekly' | 'monthly', 
-      dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }), 
-      dayOfMonth: new Date().getDate() 
+    return {
+      base: task.recurrence as 'daily' | 'weekly' | 'monthly',
+      dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+      dayOfMonth: new Date().getDate()
     };
   };
 
@@ -130,6 +130,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
   const [recurrenceBase, setRecurrenceBase] = useState<'daily' | 'weekly' | 'monthly' | null>(initialParts.base);
   const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState<string>(initialParts.dayOfWeek);
   const [recurrenceDayOfMonth, setRecurrenceDayOfMonth] = useState<number>(initialParts.dayOfMonth);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState(task?.recurrenceEndDate ? task.recurrenceEndDate.split('T')[0] : '');
   const [error, setError] = useState('');
 
   const isEditing = !!task;
@@ -147,17 +148,17 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title.trim() || !priority || !status || !estimatedEffort || (!parentId && !groupId)) {
       setError('Please fill in all required fields (Title, Priority, Status, Effort' + (!parentId ? ', and Group' : '') + ').');
       return;
     }
 
-    if (recurrenceBase && !dueDate) {
+    if (recurrenceBase && !recurrenceEndDate) {
       setError('Please set an End Date for the recurring task.');
       return;
     }
-    
+
     setError('');
 
     let recurrenceValue: string | null = null;
@@ -181,8 +182,8 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
       reminderDays: dueDate ? reminderDays : 0,
       parentId: task?.parentId || parentId,
       recurrence: recurrenceValue,
-      recurrenceEndDate: recurrenceValue && dueDate ? new Date(dueDate).toISOString() : null,
-      recurrenceOccurrenceDate: task?.recurrenceOccurrenceDate || new Date().toISOString()
+      recurrenceEndDate: recurrenceValue && recurrenceEndDate ? new Date(recurrenceEndDate).toISOString() : null,
+      recurrenceOccurrenceDate: task?.recurrenceOccurrenceDate || (dueDate ? new Date(dueDate).toISOString() : new Date().toISOString())
     };
 
     if (isEditing && task) {
@@ -200,7 +201,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div className="glass-panel" style={{ width: '600px', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', padding: '32px', position: 'relative' }}>
         <button onClick={onClose} className="btn-icon" style={{ position: 'absolute', top: '24px', right: '24px' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
         </button>
 
         <h2 style={{ marginBottom: '24px' }}>{isEditing ? 'Edit Task' : (parentId ? 'New Subtask' : 'New Task')}</h2>
@@ -259,7 +260,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
                 <option value="monthly">Monthly</option>
               </select>
             </div>
-            
+
             {recurrenceBase === 'weekly' && (
               <div style={{ flex: 1 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Repeat On</label>
@@ -283,14 +284,47 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
+          {recurrenceBase ? (
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date (Optional)</label>
+                  {dueDate && (
+                    <button
+                      type="button"
+                      onClick={() => setDueDate('')}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <input type="date" min={new Date().toLocaleDateString('en-CA')} value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>End Date *</label>
+                  {recurrenceEndDate && (
+                    <button
+                      type="button"
+                      onClick={() => setRecurrenceEndDate('')}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <input type="date" min={new Date().toLocaleDateString('en-CA')} value={recurrenceEndDate} onChange={e => setRecurrenceEndDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+              </div>
+            </div>
+          ) : (
+            <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{recurrenceBase ? 'End Date *' : 'Due Date (Optional)'}</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Date (Optional)</label>
                 {dueDate && (
-                  <button 
-                    type="button" 
-                    onClick={() => setDueDate('')} 
+                  <button
+                    type="button"
+                    onClick={() => setDueDate('')}
                     style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
                   >
                     Clear
@@ -299,11 +333,7 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
               </div>
               <input type="date" min={new Date().toLocaleDateString('en-CA')} value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Effort * (e.g. 2h)</label>
-              <input required type="text" value={estimatedEffort} onChange={e => setEstimatedEffort(e.target.value)} placeholder="e.g. 2h, 1d" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
-            </div>
-          </div>
+          )}
 
           {!parentId && (
             <div>
@@ -314,6 +344,11 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
               </select>
             </div>
           )}
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Effort * (e.g. 2h)</label>
+            <input required type="text" value={estimatedEffort} onChange={e => setEstimatedEffort(e.target.value)} placeholder="e.g. 2h, 1d" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+          </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: status === 'Done' ? 'rgba(148, 163, 184, 0.4)' : 'var(--text-secondary)' }}>Dependencies</label>
@@ -333,22 +368,22 @@ const TaskModal = ({ task, onClose, parentId }: Props) => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: !dueDate ? 'rgba(148, 163, 184, 0.4)' : 'var(--text-secondary)' }}>Reminder (Days before due date)</label>
-            <input 
-              type="number" 
-              min="0" 
+            <input
+              type="number"
+              min="0"
               disabled={!dueDate}
-              value={dueDate ? reminderDays : 0} 
-              onChange={e => setReminderDays(parseInt(e.target.value) || 0)} 
-              style={{ 
-                width: '100%', 
-                background: !dueDate ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)', 
-                border: '1px solid var(--border-color)', 
-                color: !dueDate ? 'rgba(255,255,255,0.2)' : 'white', 
-                padding: '12px', 
-                borderRadius: '8px', 
+              value={dueDate ? reminderDays : 0}
+              onChange={e => setReminderDays(parseInt(e.target.value) || 0)}
+              style={{
+                width: '100%',
+                background: !dueDate ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-color)',
+                color: !dueDate ? 'rgba(255,255,255,0.2)' : 'white',
+                padding: '12px',
+                borderRadius: '8px',
                 outline: 'none',
                 cursor: !dueDate ? 'not-allowed' : 'text'
-              }} 
+              }}
             />
             <span style={{ fontSize: '12px', color: !dueDate ? 'rgba(148, 163, 184, 0.3)' : 'var(--text-secondary)' }}>
               {!dueDate ? 'Set a due date to enable reminders' : 'Enter 0 for same-day reminder'}
